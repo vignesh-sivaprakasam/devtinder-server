@@ -1,0 +1,19 @@
+{
+  "name": "devtinder-server",
+  "version": "1.0.0",
+  "description": "tinder for dev - backend",
+  "keywords": [
+    "nodejs",
+    "javascript"
+  ],
+  "license": "ISC",
+  "author": "Vignesh M",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon src/app.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
