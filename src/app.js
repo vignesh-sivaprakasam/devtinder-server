@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
+
 const express = require("express");
 
 const { userAuth } = require("./middlewares/auth");
@@ -12,8 +12,6 @@ const User = require("./models/user");
 
 app.use(express.json());
 app.use(cookieParser());
-
-const SECRET_KEY = "DEV@TINDER$123";
 
 // Create a new user
 // POST /signup
@@ -55,14 +53,12 @@ app.post("/login", async (req, res) => {
     if (!user) {
       throw new Error("Invalid credentials");
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
       throw new Error("Invalid credentials");
     } else {
       // Create a JWT token.
-      const token = jwt.sign({ userId: user._id }, SECRET_KEY, {
-        expiresIn: "7d",
-      });
+      const token = await user.getJWT();
 
       // Add the token to the response header or body as needed.
       res.cookie("token", token, {
