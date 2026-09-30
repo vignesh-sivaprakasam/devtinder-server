@@ -13,7 +13,7 @@ const validateSignUpData = (req) => {
     throw new Error("First name and last name are required");
   } else if (firstName.length < 4 || firstName.length > 50) {
     throw new Error("First name must be between 4 and 50 characters");
-  } else if (lastName.length < 4 || lastName.length > 50) {
+  } else if (lastName.length < 1 || lastName.length > 50) {
     throw new Error("Last name must be between 4 and 50 characters");
   } else if (!validator.isEmail(emailId)) {
     throw new Error("Please provide a valid email address");

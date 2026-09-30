@@ -1,5 +1,9 @@
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const express = require("express");
+
+const { userAuth } = require("./middlewares/auth");
 const connectDB = require("./config/database");
 const { validateSignUpData } = require("./utils/validation");
 
@@ -7,12 +11,13 @@ const app = express();
 const User = require("./models/user");
 
 app.use(express.json());
+app.use(cookieParser());
+
+const SECRET_KEY = "DEV@TINDER$123";
 
 // Create a new user
 // POST /signup
 app.post("/signup", async (req, res) => {
-  console.log("Req : ", req.body);
-
   try {
     // Validate the sign-up data
     validateSignUpData(req);
@@ -21,7 +26,6 @@ app.post("/signup", async (req, res) => {
     // Encrypt the password before saving it to the database
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    // req.body.password = hashedPassword;
 
     // Creating a new instance of the User model and saving it to the database
     const newUser = new User({
@@ -54,7 +58,18 @@ app.post("/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new Error("Invalid credentials");
+    } else {
+      // Create a JWT token.
+      const token = jwt.sign({ userId: user._id }, SECRET_KEY, {
+        expiresIn: "7d",
+      });
+
+      // Add the token to the response header or body as needed.
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 36_00_000),
+      });
     }
+
     res.status(200).json({ message: "Login successful" });
   } catch (error) {
     console.error("Error during login:", error);
@@ -62,78 +77,20 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Get user by email
-// GET /user/:email
-app.get("/user/:email", async (req, res) => {
-  const email = req.params.email;
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const user = await User.findOne({ emailId: email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json(user);
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({ message: "Error fetching user" + error.message });
+    const user = req.user;
+    res.send(user);
+  } catch (err) {
+    res.status(400).send("ERROR: " + err.message);
   }
 });
 
-app.delete("/user/:id", async (req, res) => {
-  const id = req.params.id;
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(id);
-    if (!deletedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting user" + error.message });
-  }
-});
-
-app.patch("/user/:id", async (req, res) => {
-  const id = req.params.id;
-  const updateData = req.body;
-
-  try {
-    const ALLOWED_UPDATES = [
-      "photoUrl",
-      "password",
-      "about",
-      "gender",
-      "age",
-      "skills",
-    ];
-
-    const isUpdateAllowed = Object.keys(updateData).every((key) =>
-      ALLOWED_UPDATES.includes(key),
-    );
-
-    if (!isUpdateAllowed) {
-      throw new Error("Invalid update fields");
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
-      runValidators: true,
-      returnDocument: "after",
-    });
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ message: "Error updating user" + error.message });
-  }
-});
-
-// Get all users
-// GET /feed
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find();
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching users" + error.message });
+    res.send(req.user.firstName + " sent connection request");
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
   }
 });
 
