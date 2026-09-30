@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+const validator = require("validator");
+
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -18,10 +20,20 @@ const userSchema = new mongoose.Schema(
       trim: true,
       required: true,
       unique: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Invalid email format");
+        }
+      },
     },
     password: {
       type: String,
       required: true,
+      validate(value) {
+        if (!validator.isStrongPassword(value)) {
+          throw new Error("Password is not strong enough");
+        }
+      },
     },
     age: {
       type: Number,
@@ -42,6 +54,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default:
         "https://www.pngfind.com/pngs/m/610-6104451_image-placeholder-png-user-profile-placeholder-image-png.png",
+      validate(value) {
+        if (!validator.isURL(value)) {
+          throw new Error("Invalid URL format");
+        }
+      },
     },
     about: {
       type: String,
