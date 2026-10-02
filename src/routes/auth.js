@@ -2,7 +2,7 @@ const express = require("express");
 
 const { validateSignUpData } = require("../utils/validation");
 const { hashPassword } = require("../utils/password");
-const User = require("../models/user");
+const UserModel = require("../models/user");
 
 const authRouter = express.Router();
 
@@ -17,7 +17,7 @@ authRouter.post("/signup", async (req, res) => {
     const hashedPassword = await hashPassword(password);
 
     // Creating a new instance of the User model and saving it to the database
-    const newUser = new User({
+    const newUser = new UserModel({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       emailId: req.body.emailId,
@@ -40,7 +40,7 @@ authRouter.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req.body;
 
-    const user = await User.findOne({ emailId });
+    const user = await UserModel.findOne({ emailId });
     if (!user) {
       throw new Error("Invalid credentials");
     }
