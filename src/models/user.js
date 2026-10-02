@@ -45,14 +45,18 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      validate() {
-        const validGenders = ["male", "female", "other"];
-        if (!validGenders.includes(this.gender)) {
-          throw new Error(
-            `Invalid gender value: ${this.gender}. Valid values are: ${validGenders.join(", ")}`,
-          );
-        }
+      enum: {
+        values: ["male", "female", "other"],
+        message: "{VALUE} is incorrect gender.",
       },
+      // validate() {
+      //   const validGenders = ["male", "female", "other"];
+      //   if (!validGenders.includes(this.gender)) {
+      //     throw new Error(
+      //       `Invalid gender value: ${this.gender}. Valid values are: ${validGenders.join(", ")}`,
+      //     );
+      //   }
+      // },
     },
     photoUrl: {
       type: String,
