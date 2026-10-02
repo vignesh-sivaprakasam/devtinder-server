@@ -1,7 +1,7 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
 
 const { validateSignUpData } = require("../utils/validation");
+const { hashPassword } = require("../utils/password");
 const User = require("../models/user");
 
 const authRouter = express.Router();
@@ -14,9 +14,7 @@ authRouter.post("/signup", async (req, res) => {
     validateSignUpData(req);
 
     const { password } = req.body;
-    // Encrypt the password before saving it to the database
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await hashPassword(password);
 
     // Creating a new instance of the User model and saving it to the database
     const newUser = new User({
@@ -62,6 +60,19 @@ authRouter.post("/login", async (req, res) => {
     res.status(200).json({ message: "Login successful" });
   } catch (error) {
     console.error("Error during login:", error);
+    res.status(400).json({ message: "ERROR: " + error.message });
+  }
+});
+
+authRouter.post("/logout", async (req, res) => {
+  try {
+    res.cookie("token", null, {
+      expires: new Date(Date.now()), // Set the cookie to expire in the past
+    });
+
+    res.send("Logout successful");
+  } catch (error) {
+    console.error("Error during logout:", error);
     res.status(400).json({ message: "ERROR: " + error.message });
   }
 });
