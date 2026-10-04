@@ -2,6 +2,7 @@ const express = require("express");
 
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequestModel = require("../models/connectionRequest");
+const UserModel = require("../models/user");
 const userRouter = express.Router();
 
 const USER_SAFE_DATA = ["firstName", "lastName", "emailId"];
@@ -50,6 +51,58 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
     res.json({
       message: "Connections found.",
       data,
+    });
+  } catch (err) {
+    res.status(400).send("ERROR: " + err.message);
+  }
+});
+
+// Get the feed for the logged-in user
+// Query params: page, limit
+userRouter.get("/feed", userAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+    const loggedInUser = req.user;
+    // Should see all the cards except
+    // 1. his own card
+    // 2. his connections - Already connected
+    // 3. ignored connections
+    // 4. already sent connections
+
+    // Find all the connection requests (sent and received) for the logged-in user
+    const connectionRequests = await ConnectionRequestModel.find({
+      $or: [
+        {
+          fromUserId: loggedInUser._id,
+        },
+        {
+          toUserId: loggedInUser._id,
+        },
+      ],
+    })
+      .select(["fromUserId", "toUserId", "status"])
+      .skip(skip)
+      .limit(limit);
+
+    const hideUsersFromFeed = new Set();
+
+    connectionRequests.forEach((request) => {
+      hideUsersFromFeed.add(request.fromUserId.toString());
+      hideUsersFromFeed.add(request.toUserId.toString());
+    });
+
+    const users = await UserModel.find({
+      $and: [
+        { _id: { $nin: Array.from(hideUsersFromFeed) } },
+        { _id: { $ne: loggedInUser._id } },
+      ],
+    });
+
+    res.json({
+      data: users,
     });
   } catch (err) {
     res.status(400).send("ERROR: " + err.message);
