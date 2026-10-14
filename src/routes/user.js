@@ -5,7 +5,13 @@ const ConnectionRequestModel = require("../models/connectionRequest");
 const UserModel = require("../models/user");
 const userRouter = express.Router();
 
-const USER_SAFE_DATA = ["firstName", "lastName", "emailId"];
+const USER_SAFE_DATA = [
+  "firstName",
+  "lastName",
+  "emailId",
+  "photoUrl",
+  "about",
+];
 
 // Get all connection requests for the logged-in user who have the status "interested"
 userRouter.get("/user/requests", userAuth, async (req, res) => {
