@@ -1,8 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-const SECRET_KEY = "DEV@TINDER$123";
-
 const userAuth = async (req, res, next) => {
   try {
     //Read the token from the cookies
@@ -14,7 +12,7 @@ const userAuth = async (req, res, next) => {
       return;
     }
     //Validate the token
-    const decodedObj = jwt.verify(token, SECRET_KEY);
+    const decodedObj = jwt.verify(token, process.env.JWT_SECRET);
 
     const { userId } = decodedObj;
 

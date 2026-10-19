@@ -4,8 +4,6 @@ const bcrypt = require("bcrypt");
 
 const validator = require("validator");
 
-const SECRET_KEY = "DEV@TINDER$123";
-
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -84,7 +82,7 @@ const userSchema = new mongoose.Schema(
 userSchema.methods.getJWT = async function () {
   const user = this;
 
-  const token = await jwt.sign({ userId: user._id }, SECRET_KEY, {
+  const token = await jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 
